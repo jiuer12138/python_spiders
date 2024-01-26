@@ -1,20 +1,23 @@
+import random
 import sys
 
+from PySide6.QtCore import QThread
+from PySide6.QtWidgets import QFileDialog
 from scrapy.crawler import CrawlerProcess
-from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6 import QtWidgets
 
 from KJYF_spider.spiders.KJYF import KjyfSpider
 from main_window_ui import Ui_spider
+from user_agent import agent
+from multiprocessing import Process, Manager
 
 
-def crawl(q, ua, is_obey):
+def crawl(q, is_cate, ids, dir_path, images_path):
     # CrawlerProcess
     process = CrawlerProcess(settings={
-        'USER_AGENT': ua,
-        'ROBOTSTXT_OBEY': is_obey
+        'USER_AGENT': random.choice(agent)
     })
-
-    process.crawl(KjyfSpider, q=q)
+    process.crawl(KjyfSpider, q=q, is_cate=is_cate, ids=ids, dir_path=dir_path, images_path=images_path)
     process.start()
 
 
@@ -48,25 +51,68 @@ class MainWindow(QtWidgets.QMainWindow):
         self.download_image_btn.clicked.connect(self.download_image_btn_clicked)
         self.dir_path_select.clicked.connect(self.dir_path_select_clicked)
         self.image_dir_path_select.clicked.connect(self.image_dir_path_select_clicked)
+
         # 默认初始分类id
         self.category.setChecked(True)
+        # 创建线程
+        self.q = Manager().Queue()
+        self.log_thread = LogThread(self)
+        self.p = None
 
     def crawl_btn_clicked(self):
         print(self.category.isChecked())
-        pass
+        if self.dir_path.text() == '':
+            print('请选择文件路径')
+        elif self.ids.text() == '':
+            print("请输入id")
+        else:
+            self.p = Process(target=crawl, args=(
+                self.q, self.category.isChecked(), self.ids.text(), self.dir_path.text(),
+                self.image_dir_path.text()))
+            self.p.start()
+            self.log_thread.start()
 
     def download_image_btn_clicked(self):
+        if self.dir_path.text() == '':
+            print("请选择文件路径")
+        elif self.image_dir_path.text() == '':
+            print("请选择图片存储路径")
+        else:
+            print("downloading.........")
         pass
 
     def dir_path_select_clicked(self):
-        pass
+        file_path = QFileDialog.getExistingDirectory(self, "Select Directory", './')
+        if file_path:
+            self.dir_path.setText(file_path)
 
     def image_dir_path_select_clicked(self):
-        pass
+        file_path = QFileDialog.getExistingDirectory(self, "Select Directory", './')
+        if file_path:
+            self.image_dir_path.setText(file_path)
+
+
+class LogThread(QThread):
+    def __init__(self, gui):
+        super(LogThread, self).__init__()
+        self.gui = gui
+
+    def run(self):
+        while True:
+            if not self.gui.q.empty():
+                self.gui.logs_output.append(self.gui.q.get())
+                # # 确保滑动条到底
+                # cursor = self.gui.logs_output.textCursor()
+                # pos = len(self.gui.logs_output.toPlainText())
+                # cursor.movePosition(pos)
+                # self.gui.logs_output.setTextCursor(cursor)
+
+                # 睡眠10毫秒，否则太快会导致闪退或者显示乱码
+                self.msleep(10)
 
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication([])
+    app = QtWidgets.QApplication(sys.argv)
     widget = MainWindow()
     widget.show()
     sys.exit(app.exec())
