@@ -8,15 +8,14 @@ from PySide6 import QtWidgets
 
 from KJYF_spider.spiders.KJYF import KjyfSpider
 from main_window_ui import Ui_spider
-from user_agent import agent
 from multiprocessing import Process, Manager
+from utils import format_str
+from scrapy.utils.project import get_project_settings
 
 
 def crawl(q, is_cate, ids, dir_path, images_path):
     # CrawlerProcess
-    process = CrawlerProcess(settings={
-        'USER_AGENT': random.choice(agent)
-    })
+    process = CrawlerProcess(settings=get_project_settings())
     process.crawl(KjyfSpider, q=q, is_cate=is_cate, ids=ids, dir_path=dir_path, images_path=images_path)
     process.start()
 
@@ -60,11 +59,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.p = None
 
     def crawl_btn_clicked(self):
-        print(self.category.isChecked())
         if self.dir_path.text() == '':
-            print('请选择文件路径')
+            self.logs_output.append(format_str("请选择文件存储路径"))
         elif self.ids.text() == '':
-            print("请输入id")
+            self.logs_output.append(format_str("请输入id"))
         else:
             self.p = Process(target=crawl, args=(
                 self.q, self.category.isChecked(), self.ids.text(), self.dir_path.text(),
@@ -72,11 +70,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.p.start()
             self.log_thread.start()
 
+    # def closeEvent(self, event):
+    #     self.p.terminate()
+    #     self.log_thread.terminate()
+
     def download_image_btn_clicked(self):
         if self.dir_path.text() == '':
-            print("请选择文件路径")
+            self.logs_output.append(format_str("请选择文件路径"))
         elif self.image_dir_path.text() == '':
-            print("请选择图片存储路径")
+            self.logs_output.append(format_str("请选择图片存储路径"))
         else:
             print("downloading.........")
         pass
@@ -106,7 +108,9 @@ class LogThread(QThread):
                 # pos = len(self.gui.logs_output.toPlainText())
                 # cursor.movePosition(pos)
                 # self.gui.logs_output.setTextCursor(cursor)
-
+                # if '爬取结束' in self.gui.logs_output.toPlainText():
+                #     self.gui.crawl_btn.setText('开始爬取')
+                #     break
                 # 睡眠10毫秒，否则太快会导致闪退或者显示乱码
                 self.msleep(10)
 
