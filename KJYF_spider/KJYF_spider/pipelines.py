@@ -9,6 +9,7 @@ from itemadapter import ItemAdapter
 from openpyxl import Workbook
 import urllib.request
 import os
+
 from scrapy.utils.project import get_project_settings
 
 
@@ -31,5 +32,5 @@ class KjyfSpiderPipeline:
         line = [item['cate_id'], item['p_id'], item['title'], item['price'], item['spec'], item['description'],
                 item['images']]
         self.ws.append(line)
-        self.wb.save(execl_path + '/' + self.settings.get('CUSTOM_EXECL_FILE_NAME') + '.xlsx')
+        self.wb.save(execl_path + '/' + self.settings.get('CUSTOM_EXECL_FILE_NAME'))
         return item

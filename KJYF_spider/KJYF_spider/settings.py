@@ -64,7 +64,7 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    "KJYF_spider.pipelines.KjyfSpiderPipeline": 300,
+    "KJYF_spider.pipelines.KjyfSpiderPipeline": 300
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -95,9 +95,6 @@ FEED_EXPORT_ENCODING = "utf-8"
 
 # 自定义参数
 CUSTOM_EXECL_HEADERS = ['分类id', '产品id', '产品标题', '产品价格', '产品规格', '产品描述', '产品图片']
-# 保存文件的路径
-CUSTOM_FILE_PATH = '/Users/liujianfei/Downloads/py'
+
 # excel表格名称
-CUSTOM_EXECL_FILE_NAME = '产品数据'
-# 图片保存路径
-CUSTOM_IMAGES_FILE_PATH = '/Users/liujianfei/Downloads/py/images/'
+CUSTOM_EXECL_FILE_NAME = '产品数据.xlsx'

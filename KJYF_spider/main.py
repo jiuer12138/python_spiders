@@ -2,25 +2,70 @@ import random
 import sys
 
 from PySide6.QtCore import QThread
+from PySide6.QtGui import QTextCursor
 from PySide6.QtWidgets import QFileDialog
+from openpyxl import load_workbook
 from scrapy.crawler import CrawlerProcess
 from PySide6 import QtWidgets
 
 from KJYF_spider.spiders.KJYF import KjyfSpider
 from main_window_ui import Ui_spider
 from multiprocessing import Process, Manager
-from utils import format_str
+from KJYF_spider.utils import format_str
 from scrapy.utils.project import get_project_settings
+import urllib.request
+
+settings = get_project_settings()
 
 
-def crawl(q, is_cate, ids, dir_path, images_path):
+def crawl(q, is_cate, ids, dir_path):
     # CrawlerProcess
     process = CrawlerProcess(settings=get_project_settings())
-    process.crawl(KjyfSpider, q=q, is_cate=is_cate, ids=ids, dir_path=dir_path, images_path=images_path)
+    process.crawl(KjyfSpider, q=q, is_cate=is_cate, ids=ids, dir_path=dir_path)
     process.start()
+
+    # 下载图片
+
+
+def get_image_urls(q1, path, image_dir_path):
+    q1.put(format_str('开始下载图片'))
+    wb = load_workbook(path + '/' + settings.get('CUSTOM_EXECL_FILE_NAME'))
+    # 获取活动工作表
+    sheet = wb['Sheet']
+    #  获取第一行表头
+    col = None
+    p_id_col = None
+    # 第一行
+    rows = list(sheet.rows)[0]
+    for i in range(len(rows)):
+        if '图片' in list(sheet.rows)[0][i].value:
+            col = i
+        if '产品id' in list(sheet.rows)[0][i].value:
+            p_id_col = i
+    if col is None:
+        q1.put(format_str('表格中没有包含图片列'))
+    p_id_cols = []
+    for p_id in list(sheet.columns)[p_id_col]:
+        p_id_cols.append(p_id.value)
+    print(p_id_cols)
+    target = list(sheet.columns)[col]
+    for j in range(1, len(target)):
+        if target[j].value:
+            urls = target[j].value.split(',')
+            for x in range(len(urls)):
+                print('=======')
+                print(p_id_cols[j])
+                q1.put(format_str('正在下载：' + urls[x]))
+                suffix = urls[x].rsplit('.', 1)[-1]
+                urllib.request.urlretrieve(urls[x],
+                                           image_dir_path + '/' + str(p_id_cols[j]) + '_' + str(
+                                               x + 1) + '.' + suffix)
+            q1.put(format_str('产品id为：' + str(p_id_cols[j]) + '共' + str(len(urls)) + '张图片下载完成'))
+    q1.put(format_str('所有图片下载完成'))
 
 
 class MainWindow(QtWidgets.QMainWindow):
+
     def __init__(self):
         super().__init__()
         self.ui = Ui_spider()
@@ -57,6 +102,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.q = Manager().Queue()
         self.log_thread = LogThread(self)
         self.p = None
+        self.p1 = None
+
+        #  日志输出滚动条自动滚到最下方
+        self.logs_output.textChanged.connect(self.logs_output.moveCursor(QTextCursor.End))
 
     def crawl_btn_clicked(self):
         if self.dir_path.text() == '':
@@ -65,14 +114,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.logs_output.append(format_str("请输入id"))
         else:
             self.p = Process(target=crawl, args=(
-                self.q, self.category.isChecked(), self.ids.text(), self.dir_path.text(),
-                self.image_dir_path.text()))
+                self.q, self.category.isChecked(), self.ids.text(), self.dir_path.text()))
             self.p.start()
             self.log_thread.start()
-
-    # def closeEvent(self, event):
-    #     self.p.terminate()
-    #     self.log_thread.terminate()
 
     def download_image_btn_clicked(self):
         if self.dir_path.text() == '':
@@ -80,8 +124,9 @@ class MainWindow(QtWidgets.QMainWindow):
         elif self.image_dir_path.text() == '':
             self.logs_output.append(format_str("请选择图片存储路径"))
         else:
-            print("downloading.........")
-        pass
+            self.p1 = Process(target=get_image_urls, args=(self.q, self.dir_path.text(), self.image_dir_path.text()))
+            self.p1.start()
+            self.log_thread.start()
 
     def dir_path_select_clicked(self):
         file_path = QFileDialog.getExistingDirectory(self, "Select Directory", './')

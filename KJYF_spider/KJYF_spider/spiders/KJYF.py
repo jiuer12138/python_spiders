@@ -23,16 +23,9 @@ class KjyfSpider(scrapy.Spider):
         self.ids = kwargs.get('ids')
         self.is_cate = kwargs.get('is_cate')
         self.dir_path = kwargs.get('dir_path')
-        self.images_path = kwargs.get('images_path')
         # 判断分类还是商品的ids并转换为数组拼接url
         ids_list = self.ids.rstrip(',').split(',')
         self.start_urls = self.stitching_url(ids_list, self.is_cate)
-        # if self.is_cate:
-        #     for i in ids_list:
-        #         self.start_urls.append(self.base_url + 'c/' + str(i))
-        # else:
-        #     for i in ids_list:
-        #         self.start_urls.append(self.base_url + 'p/' + str(i) + '/a')
 
     # 信号可选类型  from scrapy import signals 中可以看到
     # engine_started = object()
@@ -109,23 +102,28 @@ class KjyfSpider(scrapy.Spider):
     # 解析商品详情页
     def parse_product(self, url, cate_id=-1):
         self.q.put(format_str('正在爬取链接：' + url))
-        res = self.get_updated_response(url, 2)
+        res = self.get_updated_response(url, 5)
         # 提取数据
-        title = res.xpath('//*[@id="product"]/div/div[2]/div[1]//h1/text()').get().strip()
+        title = res.xpath('//*[@id="product"]/div/div[2]/div[1]//h1/text()').get()
         images = res.xpath('//*[@id="product"]/section[1]/div[2]/div/p/img/@src').getall()
-        price = res.xpath('//*[@id="product"]/div/div[2]/div[2]/div[1]/span/text()').get().strip()
-        description = res.xpath('//*[@id="product"]/div/div[2]/div[3]/p/text()').get().strip()
+        price = res.xpath('//*[@id="product"]/div/div[2]/div[2]/div[1]/span/text()').get()
+        description = res.xpath('//*[@id="product"]/div/div[2]/div[3]/p/text()').get()
         spec = res.xpath(
             '//*[@id="product"]/div/div[2]/div[3]/div/div/div[1]//text()').getall()
         spec = [x.strip() for x in spec if x.strip() != '']
         separator = ','
         item = KjyfSpiderItem()
         item['cate_id'] = cate_id
-        item['title'] = title
-        item['images'] = separator.join(images)
-        item['price'] = price
-        item['description'] = description
-        item['spec'] = separator.join(spec)
+        if title is not None:
+            item['title'] = title.strip()
+        if images is not None:
+            item['images'] = separator.join(images)
+        if price is not None:
+            item['price'] = price.strip()
+        if description is not None:
+            item['description'] = description.strip()
+        if spec is not None:
+            item['spec'] = separator.join(spec)
         item['p_id'] = url.split('/')[-2]
         item['dir_path'] = self.dir_path
         return item
