@@ -1,3 +1,4 @@
+import re
 import time
 
 import scrapy
@@ -108,8 +109,7 @@ class KjyfSpider(scrapy.Spider):
         images = res.xpath('//*[@id="product"]/section[1]/div[2]//img/@src').getall()
         price = res.xpath('//*[@id="product"]/div/div[2]/div[2]//text()').getall()
         spec = res.xpath(
-            '//*[@id="product"]/div/div[2]/div[3]/div/div/div[1]//text()').getall()
-        spec = [x.strip() for x in spec if x.strip() != '']
+            '//*[@id="product"]//div[contains(@class,"spec")]').xpath('string(.)').get()
         separator = ','
         item = KjyfSpiderItem()
         item['cate_id'] = cate_id
@@ -121,7 +121,7 @@ class KjyfSpider(scrapy.Spider):
             price = [p for p in price if p.strip() != '']
             item['price'] = price[0].strip()
         if spec is not None:
-            item['spec'] = separator.join(spec)
+            item['spec'] = re.sub(r'\s+', ',', spec)
         item['p_id'] = url.split('/')[-2]
         item['dir_path'] = self.dir_path
         return item
