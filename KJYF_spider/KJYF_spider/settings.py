@@ -97,4 +97,4 @@ FEED_EXPORT_ENCODING = "utf-8"
 CUSTOM_EXECL_HEADERS = ['分类id', '产品id', '产品标题', '产品价格', '产品规格', '产品图片']
 
 # excel表格名称
-CUSTOM_EXECL_FILE_NAME = '产品数据.xlsx'
+CUSTOM_EXECL_FILE_NAME = '产品数据'

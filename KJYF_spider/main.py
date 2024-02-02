@@ -98,6 +98,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.category.setChecked(True)
         self.dir_path.setText('/Users/liujianfei/Downloads/py')
         self.image_dir_path.setText('/Users/liujianfei/Downloads/py/images')
+        self.ids.setText('1,2,3,4,5,6,7,8,9,10,11')
         # 创建线程
         self.q = Manager().Queue()
         self.log_thread = LogThread(self)
