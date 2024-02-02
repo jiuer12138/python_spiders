@@ -5,6 +5,7 @@ import scrapy
 from scrapy import signals
 from utils import format_str
 from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
 from items import KjyfSpiderItem
 
 
@@ -103,11 +104,14 @@ class KjyfSpider(scrapy.Spider):
     # 解析商品详情页
     def parse_product(self, url, cate_id=-1):
         self.q.put(format_str('正在爬取链接：' + url))
-        res = self.get_updated_response(url, 5)
+        res = self.get_updated_response(url)
+
         # 提取数据
         title = res.xpath('//*[@id="product"]/div/div[2]/div[1]//h1/text()').get()
         images = res.xpath('//*[@id="product"]/section[1]/div[2]//img/@src').getall()
         price = res.xpath('//*[@id="product"]/div/div[2]/div[2]//text()').getall()
+        WebDriverWait(self.driver, 10).until(
+            lambda driver: driver.find_elements_by_xpath('//*[@id="product"]//div[contains(@class,"spec")]'))
         spec = res.xpath(
             '//*[@id="product"]//div[contains(@class,"spec")]').xpath('string(.)').get()
         separator = ','
