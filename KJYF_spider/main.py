@@ -98,6 +98,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # 默认初始分类id
         self.category.setChecked(True)
+        self.dir_path.setText('/Users/liujianfei/Downloads/py')
+        self.image_dir_path.setText('/Users/liujianfei/Downloads/py/images')
         # 创建线程
         self.q = Manager().Queue()
         self.log_thread = LogThread(self)

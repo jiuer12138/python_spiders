@@ -105,9 +105,8 @@ class KjyfSpider(scrapy.Spider):
         res = self.get_updated_response(url, 5)
         # 提取数据
         title = res.xpath('//*[@id="product"]/div/div[2]/div[1]//h1/text()').get()
-        images = res.xpath('//*[@id="product"]/section[1]/div[2]/div/p/img/@src').getall()
-        price = res.xpath('//*[@id="product"]/div/div[2]/div[2]/div[1]/span/text()').get()
-        description = res.xpath('//*[@id="product"]/div/div[2]/div[3]/p/text()').get()
+        images = res.xpath('//*[@id="product"]/section[1]/div[2]//img/@src').getall()
+        price = res.xpath('//*[@id="product"]/div/div[2]/div[2]//text()').getall()
         spec = res.xpath(
             '//*[@id="product"]/div/div[2]/div[3]/div/div/div[1]//text()').getall()
         spec = [x.strip() for x in spec if x.strip() != '']
@@ -119,9 +118,8 @@ class KjyfSpider(scrapy.Spider):
         if images is not None:
             item['images'] = separator.join(images)
         if price is not None:
-            item['price'] = price.strip()
-        if description is not None:
-            item['description'] = description.strip()
+            price = [p for p in price if p.strip() != '']
+            item['price'] = price[0].strip()
         if spec is not None:
             item['spec'] = separator.join(spec)
         item['p_id'] = url.split('/')[-2]

@@ -29,7 +29,7 @@ class KjyfSpiderPipeline:
         execl_path = item['dir_path'].rstrip("\\")
         if not os.path.exists(execl_path):
             os.makedirs(execl_path)
-        line = [item['cate_id'], item['p_id'], item['title'], item['price'], item['spec'], item['description'],
+        line = [item['cate_id'], item['p_id'], item['title'], item['price'], item['spec'],
                 item['images']]
         self.ws.append(line)
         self.wb.save(execl_path + '/' + self.settings.get('CUSTOM_EXECL_FILE_NAME'))

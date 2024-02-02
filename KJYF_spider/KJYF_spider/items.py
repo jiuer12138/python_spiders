@@ -19,8 +19,6 @@ class KjyfSpiderItem(scrapy.Item):
     images = scrapy.Field()
     # 产品价格
     price = scrapy.Field()
-    # 产品描述
-    description = scrapy.Field()
     # 产品规格
     spec = scrapy.Field()
     # 文件存储路径
