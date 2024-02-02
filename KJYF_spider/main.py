@@ -53,8 +53,6 @@ def get_image_urls(q1, path, image_dir_path):
         if target[j].value:
             urls = target[j].value.split(',')
             for x in range(len(urls)):
-                print('=======')
-                print(p_id_cols[j])
                 q1.put(format_str('正在下载：' + urls[x]))
                 suffix = urls[x].rsplit('.', 1)[-1]
                 urllib.request.urlretrieve(urls[x],
